@@ -1,0 +1,206 @@
+Baixar .iso netInstall
+Criar VM com Bridge Network
+Debian GNU/Linux Installer boot menu -> Graphical Install
+Language -> Portuguese (Brazil) -> Continue
+País Território ou área -> Brasil -> Continuar
+Mapa de teclado -> Português Brasileiro -> Continuar
+Nome de máquina -> debianServer -> Continuar
+Nome de domínio -> em branco -> Continuar
+senha do root -> 123 123 -> Continuar
+Nome Completo ... -> Marcelo Telles -> Continuar
+Nome de usuário -> marcelot -> Continuar
+Escolha uma senha -> 123 123 -> Continuar
+Selecione um estado -> Distrito Federal -> Continuar
+Método de particionamento -> Assistido -> usar o disco inteiro -> Continuar
+Selecione o disco ... -> SCSI3 -> Continuar
+Esquema -> Todos arquivo em uma única partição -> Continuar
+Particionar Discos -> Finalizar o particionamento -> Continuar
+Particionar Discos -> Sim -> Continuar
+Ler outro CD DVD -> Não -> Continuar
+País de espelho do repositório Debian -> Basil -> Continuar
+Espelho do repositório Debian -> ftp.br.debian.org -> Continuar
+Informação sobre proxy -> em branco -> Continuar
+Participar do concurso ... -> Não -> Continuar
+Escolha o software -> ambiente, servidor web, SSH, utilitários -> Continuar
+Instalar o carregador de inicialização -> Sim -> Continuar
+Dispositivo no qual instalar ... -> /dev/sda -> Continuar
+Finalizar a instalação -> Continuar
+
+Adicionais para convidado -colocar CD
+Area de transf Bi
+Arras e Soltar Bi
+
+
+Logar -> enter marcelot 123
+su root
+apt-get install build-essential
+S
+apt-get install linux-headers-$(uname -r)
+S
+Dispositivos -> instalar adicionais para convidado.
+Terminal
+mkdir vbox
+cp /media/cdrom0/VBoxLinuxAdditions.run /home/marcelot/vbox
+cd vbox
+./VBoxLinuxAdditions.run
+
+Port Forward Configurações Rede Avançado Redirecionamento Adicionar
+Rule ssh
+Protocolo TCP
+Endereço 192.168.15.20 e/ou 127.0.0.1
+Porta 22222 22333
+IP convidado 10.0.2.15
+Porta 22
+
+Port Forward Configurações Rede Avançado Redirecionamento Adicionar
+Rule apache
+Protocolo TCP
+Endereço 192.168.15.20 e/ou 127.0.0.1
+Porta 8089 8033
+IP convidado 10.0.2.15
+Porta 80
+
+Port Forward Configurações Rede Avançado Redirecionamento Adicionar
+Rule SMB
+Protocolo TCP
+Endereço 192.168.15.20 e/ou 127.0.0.1
+Porta 13933
+IP convidado 10.0.2.15
+Porta 139
+
+Port Forward Configurações Rede Avançado Redirecionamento Adicionar
+Rule Mysql
+Protocolo TCP
+Endereço 192.168.15.20 e/ou 127.0.0.1
+Porta 3309
+IP convidado 10.0.2.15
+Porta 3306
+
+nano /etc/ssh/sshd_config
+Adicionar PermitRootLogin yes
+Descomentar PubKeyAuthentication yes
+Descomentar AuthorizedKeysFile
+Descomentar PasswordAuthentication yes
+systemctl restart ssh
+
+
+#w10
+ssh-copy-id-22333 root@127.0.0.1
+
+#linux
+ssh -p 22333 root@127.0.0.1
+
+nano /etc/apt/sources.list
+deb http://ftp.de.debian.org/debian stretch main
+
+nano /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 4.2.2.2
+systemctl restart networking.service
+
+apt-get update
+
+apt-get install samba
+mkdir /home/dados
+chmod 777 -R /home/dados/
+cp /etc/samba/smb.conf /etc/samba/smb.conf.old
+nano /etc/samba/smb.conf
+
+wins support = yes
+[dados]
+path = /home/dados
+create mask = 777
+directory mask = 777
+browsable = yes
+guest ok = yes
+read only = no
+public = yes
+
+[site]
+comment = site
+path = /var/www/html/site
+valid users = @users
+force group = users
+create mask = 0660
+directory mask = 0775
+writable = yes
+
+mkdir /var/www/html/site
+chmod 0775 -R /var/www/html/site/
+chown username:users -R /var/www/html/site/
+
+systemctl restart smbd
+adduser username
+smbpasswd username
+
+apt-get -y install mariadb-server mariadb-client
+mysql_secure_installation
+123
+Y
+123
+Y
+n
+n
+Y
+
+apt-get -y install apache2
+
+apt install php7.3
+apt -y install php-apcu
+apt install php7.3-apc
+apt install php7.3-cli php7.3-common php7.3-curl php7.3-gd php7.3-json php7.3-mbstring php7.3-mysql php7.3-xml
+
+apt -y install wget php php-cgi php-mysqli php-pear php-mbstring php-gettext libapache2-mod-php php-common php-phpseclib php-mysql
+
+
+
+mysql -u root -p
+CREATE USER 'seconduser'@'%' IDENTIFIED BY 'zxasqw12';
+grant ALL privileges on fr_dev.* to 'seconduser'@'%' IDENTIFIED by 'zxasqw12';
+
+mysql -u root -p
+create database test;
+quit
+
+nano /etc/apache2/conf-enabled/charset.conf
+descomentar AddDefaultCharset UTF-8
+
+#erro
+apt-get install curl
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php -r "if (hash_file('sha384', 'composer-setup.php') === '48e3236262b34d30969dca3c37281b3b4bbe3221bda826ac6a9a62d6444cdb0dcd0615698a5cbe587c3f0fe57a54d8f5') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+
+1_cria
+2_models
+
+
+Nova
+debian-server-php
+root
+123
+marcelot
+123
+apt-get install sudo
+Instalar network-manager(apt-get install network-manager) pela media (deixar o source.list com CDROM)
+reboot
+apt-get update
+apt-get upgrade
+apt-get install build-essential
+apt-get install linux-headers-$(uname -r)
+
+ssh root@191.252.109.103
+
+rsync -chavzP -e ssh /Users/marcelotelles/facility/servidores/cursoPHP root@191.252.109.103:/root/
+scp /Users/marcelotelles/facility/servidores/cursoPHP/app.php root@191.252.109.103:/var/www/html/aluno1/site/config/app.php
+
+
+aluno entra ja tem base de dados, já tem user no mysql
+cd /var/www/html/aluno1/
+composer create-project --prefer-dist cakephp/app site --no-interaction
+na vps
+
+ip da vps 191.252.109.103
+
+ssh BRUNO@191.252.109.103
